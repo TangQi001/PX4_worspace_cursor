@@ -1,6 +1,6 @@
 // See https://aka.ms/vscode-remote/devcontainer.json for format details.
 {
-	"dockerFile": "Dockerfile",
+	"dockerFile": "E:/Project/PX4/PX4_worspace_cursor/px4/px4_1.14.Dockerfile",
 	"build": {
 		"args": {
 			"WORKSPACE": "${containerWorkspaceFolder}"
@@ -12,18 +12,24 @@
 		"--cap-add=SYS_PTRACE",
 		"--security-opt=seccomp:unconfined",
 		"--security-opt=apparmor:unconfined",
-		"--volume=/tmp/.X11-unix:/tmp/.X11-unix",
-		"--volume=/mnt/wslg:/mnt/wslg",
-		"--ipc=host"
+		"--volume=/tmp/.X11-unix:/tmp/.X11-unix", // Keep X11 socket mount
+		// "--volume=/mnt/wslg:/mnt/wslg", // Remove WSLg mount as we are using VcXsrv
+		"--env=DISPLAY=host.docker.internal:0", // Set DISPLAY for VcXsrv on host
+		"--ipc=host",
+		"--privileged",
+		"--shm-size=1g", // Increase shared memory for Gazebo
+		"--publish=18550:18550/udp", // PX4 SITL UDP port
+		"--publish=18570:18570/udp" // PX4 offboard UDP port
 		// uncomment to use intel iGPU
-		// "--device=/dev/dri"
+		//"--device=/dev/dri"
 	],
 	"containerEnv": {
-		"DISPLAY": "${localEnv:DISPLAY}", // Needed for GUI try ":0" for windows
+		// DISPLAY is now set via runArgs --env parameter for VcXsrv compatibility
 		"WAYLAND_DISPLAY": "${localEnv:WAYLAND_DISPLAY}",
-		"XDG_RUNTIME_DIR": "${localEnv:XDG_RUNTIME_DIR}",
+		"XDG_RUNTIME_DIR": "/tmp/runtime-ros",
 		"PULSE_SERVER": "${localEnv:PULSE_SERVER}",
-		"LIBGL_ALWAYS_SOFTWARE": "1" // Needed for software rendering of opengl
+		"LIBGL_ALWAYS_SOFTWARE": "1", // Needed for software rendering of opengl
+		"MESA_LOADER_DRIVER_OVERRIDE": "kms_swrast" // Force Mesa to use kms_swrast_dri.so instead of missing vgem_dri.so
 	},
 	// Set *default* container specific settings.json values on container create.
 	"customizations": {
